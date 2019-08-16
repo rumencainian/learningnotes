@@ -23,3 +23,13 @@ DirectMemory中可以直接通过DMA发送到网卡接口
 
 3、对于FileChannel.transferTo的使用
 Netty中使用了FileChannel的transferTo方法，该方法依赖于操作系统实现零拷贝。
+
+Netty内部执行流程
+服务端：
+1、创建ServerBootStrap实例
+2、设置并绑定Reactor线程池：EvenLoopGroup,EventLoop就是处理所有注册到本线程的Selector上面的Channel
+3、设置并绑定服务端的channel
+4、5、创建处理网络事件的ChannelPipeline和handler，网络时间以流的形式再其中流转，handler完成多数的功能定制：比如编解码SSI安全认证
+6、绑定并启动监听端口
+7、当轮训到准备就绪的channel后。由Reactor线程：NioEventLoop执行pipeline中的方法，最终调度并执行channelHandler
+
