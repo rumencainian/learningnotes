@@ -1,0 +1,25 @@
+传统意义的零拷贝
+实现方式：1、File.read(bytes) 2、Socket.send(bytes)
+原理：
+1、数据从磁盘读取到内核的read buffer
+2、数据从内核缓冲区拷贝到用户缓冲区
+3、数据从用户缓冲区拷贝到内核的socket buffer
+4、数据从内核的socket buffer 拷贝到网卡接口的缓冲区
+
+零拷贝的概念
+1、调用transferTo，数据从文件由DMA引擎拷贝到内核read buffer
+2、接着DMA引擎从内核read buffer 将数据拷贝到网卡接口buffer
+（因为这两次操作不需要CPU参与，所以就达到了零拷贝）
+
+Netty中的零拷贝
+1、byteBuffer
+Netty发送和接收消息主要使用byteBuffer,byteBuffer使用对外内存（DirectMemory)直接进行Socket读写。
+原因：如果使用传统的堆内存进行Socket读写，JVM会将堆内存buffer拷贝到一份直接内存中然后再写入Socket，多了一次缓冲区的内存拷贝。
+DirectMemory中可以直接通过DMA发送到网卡接口
+
+2、Composite Buffers
+传统的ByteBuffer,如果需要将两个ByteBuffer中的数据组合到一起，我们需要首先创建一个size=size1+size2大小的新的数组，然后将数组中的数据拷贝到新的数组中。
+使用Netty提供的ByteBuffer,就可以避免这样的操作，因为Composite ByteBuffer并没有真正将多个Buffer组合起来，而是保存了它们的引用，从而避免了数据的拷贝，实现了零拷贝
+
+3、对于FileChannel.transferTo的使用
+Netty中使用了FileChannel的transferTo方法，该方法依赖于操作系统实现零拷贝。
