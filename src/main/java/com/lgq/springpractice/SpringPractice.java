@@ -15,6 +15,7 @@ public class SpringPractice {
     }
     public void test(){
 
+
     }
 
 }
